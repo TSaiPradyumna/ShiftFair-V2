@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: ShiftFair V2 - explainable fair shift-swap arbitration
+
+Globals:
+  Function:
+    Runtime: python3.13
+    Timeout: 30
+    Environment:
+      Variables:
+        DYNAMO_ENDPOINT: "http://host.docker.internal:4566"
+        TABLE_NAME: "ShiftFairV2Table"
+        AWS_DEFAULT_REGION: "us-east-1"
+        AWS_ACCESS_KEY_ID: "test"
+        AWS_SECRET_ACCESS_KEY: "test"
+        AWS_EC2_METADATA_DISABLED: "true"
+
+Resources:
+  ShiftFairV2Api:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors:
+        AllowOrigin: "'http://127.0.0.1:5501'"
+        AllowHeaders: "'Content-Type'"
+        AllowMethods: "'GET,POST,OPTIONS'"
+
+  CedarPolicyLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: ShiftFairV2CedarPolicies
+      Description: Cedar policies for ShiftFair V2
+      ContentUri: cedar-policies/
+      CompatibleRuntimes:
+        - python3.13
+
+  SwapRequestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/swap_request/
+      Handler: app.lambda_handler
+      Layers:
+        - !Ref CedarPolicyLayer
+      Events:
+        SwapRequest:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ShiftFairV2Api
+            Path: /swap-request
+            Method: post
+
+  RosterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/roster/
+      Handler: app.lambda_handler
+      Events:
+        Roster:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ShiftFairV2Api
+            Path: /roster
+            Method: get
+
+  DecisionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/decisions/
+      Handler: app.lambda_handler
+      Events:
+        Decisions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ShiftFairV2Api
+            Path: /decisions
+            Method: get
+
+Outputs:
+  ApiUrl:
+    Value: !Sub "https://${ShiftFairV2Api}.execute-api.${AWS::Region}.amazonaws.com/Prod"

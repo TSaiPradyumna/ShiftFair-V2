@@ -1,0 +1,33 @@
+entity User {
+    id: String,
+    role: String,
+    department: String,
+    weekly_hours: Long,
+    maximum_weekly_hours: Long,
+    skill_level: Long,
+    consecutive_working_days: Long,
+    maximum_consecutive_days: Long,
+    minimum_notice_hours: Long,
+    previous_swap_count: Long,
+    maximum_swap_count: Long,
+    experience_years: Long,
+    performance_score: Long,
+    current_night_count: Long,
+    max_night_shifts_per_week: Long,
+    minimum_rest_hours: Long
+};
+
+entity Shift {
+    shift_type: String,
+    shift_hours: Long,
+    hours_since_last_shift: Long,
+    required_skill_level: Long,
+    notice_hours: Long,
+    required_experience_years: Long,
+    minimum_performance_score: Long,
+    from_employee: String
+};
+
+action AssignShift appliesTo { principal: User, resource: Shift };
+action RequestSwap appliesTo { principal: User, resource: Shift };
+action CancelSwap appliesTo { principal: User, resource: Shift };
