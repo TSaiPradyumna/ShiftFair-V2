@@ -556,7 +556,5 @@ The final implementation, integration, testing, and project decisions were perfo
 
 ---
 
-## License
 
-Add the license required by the hackathon or the license you choose for the repository.
 
